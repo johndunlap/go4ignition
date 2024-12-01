@@ -9,6 +9,6 @@ with time constraints then _go4ignition_ might be exactly what you're looking fo
 
 # reload.sh
 **This script has only been tested on Linux.** This is the core of the developer experience. Running this script will
-compile your application, run it, watch the project directory for changes, and, when changes are detected, it will kill
+compile your application, run it, watch the project directory for changes. When a file is modified it will kill
 your application, re-compile it, and restart it. A round trip typically takes less than 2 seconds from the moment you
 save a file in your editor.
