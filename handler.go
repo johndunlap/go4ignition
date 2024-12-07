@@ -94,12 +94,14 @@ func sendChatHandler(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err := tmpl.ExecuteTemplate(res, "template/fragment/my-message.html", struct {
+	err := tmpl.ExecuteTemplate(res, "template/fragment/message.html", struct {
 		Message string
 		Time    string
+		Class   string
 	}{
 		Message: req.FormValue("message"),
 		Time:    "now",
+		Class:   "me",
 	})
 	if err != nil {
 		log.Println("ERROR: " + err.Error())
