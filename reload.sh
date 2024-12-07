@@ -13,6 +13,8 @@ run_command() {
         wait "$PID" 2>/dev/null
     fi
 
+    ./genstatic.sh
+    ./gentemplate.sh
     go build -o bin/go4ignition .
 
     if [ $? -eq 0 ]; then

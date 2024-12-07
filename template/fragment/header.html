@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go4ignition</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        .chat-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .header-bar {
+            width: 100%;
+            height: 50px;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1002;
+        }
+
+        #hamburger {
+            cursor: pointer;
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+
+        .conversations {
+            width: 280px;
+            background: #34495e;
+            color: #ecf0f1;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            position: fixed;
+            top: 50px;
+            bottom: 0;
+            left: 0;
+            z-index: 1001;
+        }
+
+        .chat-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            margin-left: 280px;
+            margin-top: 50px;
+        }
+
+        .messages {
+            flex-grow: 1;
+            background: #f0f0f0;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            max-width: 75%;
+            padding: 10px 15px;
+            margin: 5px 0;
+            border-radius: 10px;
+            word-wrap: break-word;
+        }
+
+        .message.them {
+            background: #e6ffe6;
+            align-self: flex-start;
+        }
+
+        .message.me {
+            background: #e6f3ff;
+            align-self: flex-end;
+        }
+
+        .input-area {
+            display: flex;
+            width: calc(100vw - 280px);
+            padding: 5px 15px;
+            background: #ecf0f1;
+            position: fixed;
+            bottom: 0;
+            left: 280px;
+            box-sizing: border-box;
+        }
+
+        #message-input {
+            flex-grow: 1;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin-right: 10px;
+            box-sizing: border-box;
+        }
+
+        #send-button {
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+
+        #send-button:hover {
+            background: #2980b9;
+        }
+
+        .timestamp {
+            font-size: 0.75em;
+            color: #888;
+            margin-top: 2px;
+            text-align: right;
+        }
+
+        #overlay {
+            position: fixed;
+            display: none;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        @media (max-width: 768px) {
+            #hamburger {
+                display: block;
+            }
+
+            .conversations {
+                width: 80vw;
+                transform: translateX(-100%);
+            }
+
+            .conversations.active {
+                transform: translateX(0);
+            }
+
+            .chat-area {
+                margin-left: 0;
+                width: 100vw;
+            }
+
+            .input-area {
+                left: 0;
+                width: 100vw;
+            }
+        }
+
+        .conversation-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .conversation-item:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .conversation-item.active {
+            background-color: rgba(255,255,255,0.2);
+        }
+
+        .profile-initials {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #3498db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+            margin-right: 10px;
+        }
+
+        .user-details {
+            flex-grow: 1;
+        }
+
+        .user-name {
+            font-size: 16px;
+            margin-bottom: 2px;
+        }
+
+        .last-message {
+            font-size: 14px;
+            color: #bdc3c7;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+
+        .status-indicator.online {
+            background: #2ecc71;
+        }
+
+        .status-indicator.offline {
+            background: #e74c3c;
+        }
+
+        #search-bar {
+            width: calc(100% - 30px);
+            padding: 8px 15px;
+            background: #2c3e50;
+            color: #ecf0f1;
+            border: none;
+            border-bottom: 1px solid #34495e;
+            margin: 10px 15px;
+            border-radius: 0;
+        }
+
+        #search-bar:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .tiblock {
+            align-items: center;
+            display: flex;
+            height: 17px;
+        }
+
+        .ticontainer .tidot {
+            background-color: #90949c;
+        }
+
+        .tidot {
+            -webkit-animation: mercuryTypingAnimation 1.5s infinite ease-in-out;
+            border-radius: 2px;
+            display: inline-block;
+            height: 4px;
+            margin-right: 2px;
+            width: 4px;
+        }
+
+        @-webkit-keyframes mercuryTypingAnimation{
+            0%{
+                -webkit-transform:translateY(0px)
+            }
+            28%{
+                -webkit-transform:translateY(-5px)
+            }
+            44%{
+                -webkit-transform:translateY(0px)
+            }
+        }
+
+        .tidot:nth-child(1){
+            -webkit-animation-delay:200ms;
+        }
+        .tidot:nth-child(2){
+            -webkit-animation-delay:300ms;
+        }
+        .tidot:nth-child(3){
+            -webkit-animation-delay:400ms;
+        }
+    </style>
+    <script src="{{ (call .FileResolver "/static/js/htmx-2.0.3.js") }}"></script>
+    <script src="{{ (call .FileResolver "/static/js/websocket.js") }}"></script>
+</head>

@@ -1,10 +1,11 @@
 package main
 
 import (
+	"bytes"
 	_ "embed"
 	"errors"
 	"fmt"
-	"golang.org/x/net/websocket"
+	"github.com/gorilla/websocket"
 	"html/template"
 	"log"
 	"net/http"
@@ -14,38 +15,66 @@ import (
 	"time"
 )
 
-//go:embed template/index.html
-var indexTpl []byte
-
-//go:embed static/js/websocket.js
-var websocketJs []byte
-
-var TemplateContents = map[string][]byte{
-	"template/index.html": indexTpl,
-}
-
 var tmpl = template.New("base")
 
-var TemplateHandlers = map[string]func(res http.ResponseWriter, req *http.Request){
-	"/": IndexHandler,
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin: func(req *http.Request) bool {
+		// TODO: Possibly rethink this in production. Reject connections without a recognized domain in
+		//  the Host header?
+		return true
+	},
 }
 
-var StaticFiles = map[string][]byte{
-	"/static/js/websocket.js": websocketJs,
+const (
+	writeWait      = 10 * time.Second
+	pongWait       = 60 * time.Second
+	pingPeriod     = (pongWait * 9) / 10
+	maxMessageSize = 512
+)
+
+var (
+	newline = []byte{'\n'}
+	space   = []byte{' '}
+)
+
+type Hub struct {
+	// Registered clients.
+	clients map[*Client]bool
+
+	// Inbound messages from the clients.
+	broadcast chan []byte
+
+	// Register requests from the clients.
+	register chan *Client
+
+	// Unregister requests from clients.
+	unregister chan *Client
 }
 
-var StaticFilesContentType = map[string]string{
-	"/static/js/websocket.js": "text/javascript",
+type Client struct {
+	hub *Hub
+
+	// The websocket connection.
+	conn *websocket.Conn
+
+	// Buffered channel of outbound messages.
+	send chan []byte
 }
 
 func main() {
 	sigc := make(chan os.Signal, 1)
 	signal.Notify(sigc, os.Interrupt, syscall.SIGTERM)
 	parseTemplates()
+	InitDb()
+	RunMigrations(migrations)
 
 	go func() {
-		http.Handle("/ws", websocket.Handler(websocketHandler))
-		http.HandleFunc("/", requestHandler)
+		http.HandleFunc("/favicon.ico", faviconHandler)
+		http.HandleFunc("/ws", wsHandler)
+		http.HandleFunc("/", indexHandler)
+		http.HandleFunc("/static/", staticHandler)
 
 		fmt.Printf("Starting server: http://localhost:8888\n")
 		err := http.ListenAndServe(":8888", nil)
@@ -63,21 +92,80 @@ func main() {
 	os.Exit(0)
 }
 
-func websocketHandler(ws *websocket.Conn) {
-	fmt.Println("Websocket client connected")
-	for {
-		var msg string
-		if err := websocket.Message.Receive(ws, &msg); err != nil {
-			fmt.Println("Error receiving message:", err)
-			break
+func indexHandler(res http.ResponseWriter, req *http.Request) {
+	// Obnoxiously, this pattern is treated as a wildcard by the HTTP server, so we have to manually return 404 from
+	// this handler when the request URI isn't "/"
+	if req.URL.Path != "/" {
+		NotFoundHandler(res, req)
+		return
+	}
+
+	SetHeaders(res, req)
+
+	data := NewPageData("", req)
+
+	err := tmpl.ExecuteTemplate(res, "template/index.html", data)
+	if err != nil {
+		println("ERROR: " + err.Error())
+	}
+}
+
+func wsHandler(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer conn.Close()
+
+	err = conn.SetReadDeadline(time.Now().Add(pongWait))
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	conn.SetPongHandler(func(string) error {
+		err = conn.SetReadDeadline(time.Now().Add(pongWait))
+		if err != nil {
+			log.Println(err)
 		}
-		fmt.Printf("Received: %s\n", msg)
-		if err := websocket.Message.Send(ws, "ACK: "+msg); err != nil {
-			fmt.Println("Error sending message:", err)
-			break
+		return nil
+	})
+
+	for {
+		messageType, message, err := conn.ReadMessage()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		fmt.Println("Received message:", string(message))
+
+		err = conn.WriteMessage(messageType, message)
+		if err != nil {
+			log.Println(err)
+			return
 		}
 	}
-	fmt.Println("Websocket client disconnected")
+}
+
+func websocketHandler(ws *websocket.Conn) {
+	/*	fmt.Println("Websocket client connected")
+
+		for {
+			var msg string
+			if err := websocket.Message.Receive(ws, &msg); err != nil {
+				fmt.Println("Error receiving message:", err)
+				break
+			}
+			fmt.Printf("Received: %s\n", msg)
+			if err := websocket.Message.Send(ws, "ACK: "+msg); err != nil {
+				fmt.Println("Error sending message:", err)
+				break
+			}
+		}
+		fmt.Println("Websocket client disconnected")
+	*/
 }
 
 func requestHandler(res http.ResponseWriter, req *http.Request) {
@@ -91,37 +179,8 @@ func requestHandler(res http.ResponseWriter, req *http.Request) {
 	}
 
 	mux.HandleFunc("/static/", staticHandler)
-	mux.Handle("/ws", websocket.Handler(websocketHandler))
+	//mux.Handle("/ws", websocket.Handler(websocketHandler))
 	mux.ServeHTTP(res, req)
-}
-
-func staticHandler(res http.ResponseWriter, req *http.Request) {
-	if len(StaticFiles[req.RequestURI]) > 0 {
-		res.Header().Set("Content-Type", StaticFilesContentType[req.RequestURI])
-		res.Header().Set("Cache-Control", "public, max-age=31536000")
-		res.Header().Set("Expires", time.Now().Add(365*24*time.Hour).Format(http.TimeFormat))
-		count, err := res.Write(StaticFiles[req.RequestURI])
-
-		if err != nil || count == 0 {
-			NotFoundHandler(res, req)
-		}
-	} else {
-		NotFoundHandler(res, req)
-	}
-}
-
-func IndexHandler(res http.ResponseWriter, req *http.Request) {
-	if req.URL.Path != "/" {
-		NotFoundHandler(res, req)
-		return
-	}
-
-	SetHeaders(res, req)
-
-	err := tmpl.ExecuteTemplate(res, "template/index.html", nil)
-	if err != nil {
-		println("ERROR: " + err.Error())
-	}
 }
 
 func parseTemplates() {
@@ -135,14 +194,24 @@ func parseTemplates() {
 	}
 }
 
-func NotFoundHandler(res http.ResponseWriter, req *http.Request) {
-	SetHeaders(res, req)
-	res.WriteHeader(http.StatusNotFound)
+type Person struct {
+	Name string
+	Age  int
+}
 
-	err := tmpl.ExecuteTemplate(res, "template/not_found.html", nil)
-	if err != nil {
-		println("ERROR: " + err.Error())
-	}
+func (p Person) Save() {
+	// Add Person-specific save logic here (or just a debug print for now)
+	println("Saving Person:", p.Name)
+}
+
+type Inventory struct {
+	Item  string
+	Count int
+}
+
+func (i Inventory) Save() {
+	// Add Inventory-specific save logic here
+	println("Saving Inventory item:", i.Item)
 }
 
 func SetHeaders(res http.ResponseWriter, req *http.Request) {
@@ -159,4 +228,127 @@ func SetHeaders(res http.ResponseWriter, req *http.Request) {
 
 func IsHTMX(req *http.Request) bool {
 	return req.Header.Get("HX-Request") == "true"
+}
+
+func newHub() *Hub {
+	return &Hub{
+		broadcast:  make(chan []byte),
+		register:   make(chan *Client),
+		unregister: make(chan *Client),
+		clients:    make(map[*Client]bool),
+	}
+}
+
+func (h *Hub) run() {
+	for {
+		select {
+		case client := <-h.register:
+			h.clients[client] = true
+		case client := <-h.unregister:
+			if _, ok := h.clients[client]; ok {
+				delete(h.clients, client)
+				close(client.send)
+			}
+		case message := <-h.broadcast:
+			for client := range h.clients {
+				select {
+				case client.send <- message:
+				default:
+					close(client.send)
+					delete(h.clients, client)
+				}
+			}
+		}
+	}
+}
+
+// readPump pumps messages from the websocket connection to the hub.
+//
+// The application runs readPump in a per-connection goroutine. The application
+// ensures that there is at most one reader on a connection by executing all
+// reads from this goroutine.
+func (c *Client) readPump() {
+	defer func() {
+		c.hub.unregister <- c
+		c.conn.Close()
+	}()
+	c.conn.SetReadLimit(maxMessageSize)
+	c.conn.SetReadDeadline(time.Now().Add(pongWait))
+	c.conn.SetPongHandler(func(string) error {
+		c.conn.SetReadDeadline(time.Now().Add(pongWait))
+		return nil
+	})
+	for {
+		_, message, err := c.conn.ReadMessage()
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Printf("error: %v", err)
+			}
+			break
+		}
+		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
+		c.hub.broadcast <- message
+	}
+}
+
+// writePump pumps messages from the hub to the websocket connection.
+//
+// A goroutine running writePump is started for each connection. The
+// application ensures that there is at most one writer to a connection by
+// executing all writes from this goroutine.
+func (c *Client) writePump() {
+	ticker := time.NewTicker(pingPeriod)
+	defer func() {
+		ticker.Stop()
+		c.conn.Close()
+	}()
+	for {
+		select {
+		case message, ok := <-c.send:
+			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if !ok {
+				// The hub closed the channel.
+				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				return
+			}
+
+			w, err := c.conn.NextWriter(websocket.TextMessage)
+			if err != nil {
+				return
+			}
+			w.Write(message)
+
+			// Add queued chat messages to the current websocket message.
+			n := len(c.send)
+			for i := 0; i < n; i++ {
+				w.Write(newline)
+				w.Write(<-c.send)
+			}
+
+			if err := w.Close(); err != nil {
+				return
+			}
+		case <-ticker.C:
+			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				return
+			}
+		}
+	}
+}
+
+// serveWs handles websocket requests from the peer.
+func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
+	client.hub.register <- client
+
+	// Allow collection of memory referenced by the caller by doing all work in
+	// new goroutines.
+	go client.writePump()
+	go client.readPump()
 }
