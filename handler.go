@@ -45,7 +45,7 @@ func IndexHandler(res http.ResponseWriter, req *http.Request) {
 
 	err := tmpl.ExecuteTemplate(res, "template/index.html", nil)
 	if err != nil {
-		println("ERROR: " + err.Error())
+		log.Println("ERROR: " + err.Error())
 	}
 }
 
@@ -86,6 +86,26 @@ func staticHandler(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
+func sendChatHandler(res http.ResponseWriter, req *http.Request) {
+	SetHeaders(res, req)
+
+	if req.Method != http.MethodPost {
+		NotFoundHandler(res, req)
+		return
+	}
+
+	err := tmpl.ExecuteTemplate(res, "template/fragment/my-message.html", struct {
+		Message string
+		Time    string
+	}{
+		Message: req.FormValue("message"),
+		Time:    "now",
+	})
+	if err != nil {
+		log.Println("ERROR: " + err.Error())
+	}
+}
+
 // NotFoundHandler HTTP handler for URI /not_found
 func NotFoundHandler(res http.ResponseWriter, req *http.Request) {
 	SetHeaders(res, req)
@@ -96,7 +116,7 @@ func NotFoundHandler(res http.ResponseWriter, req *http.Request) {
 
 	err := tmpl.ExecuteTemplate(res, "template/not_found.html", data)
 	if err != nil {
-		println("ERROR: " + err.Error())
+		log.Println("ERROR: " + err.Error())
 	}
 }
 
@@ -109,6 +129,6 @@ func RegisterHandler(res http.ResponseWriter, req *http.Request) {
 
 	err := tmpl.ExecuteTemplate(res, "template/register.html", data)
 	if err != nil {
-		println("ERROR: " + err.Error())
+		log.Println("ERROR: " + err.Error())
 	}
 }

@@ -10,10 +10,13 @@ import (
 var md5d41d8cd98f00b204e9800998ecf8427e []byte
 
 //go:embed template/index.html
-var md547e221f0ec6cc53390972e59b7820ecf []byte
+var md5229c0df79c3c029fe8d0bbac997d8d43 []byte
 
 //go:embed template/fragment/header.html
-var md542f5a74e7bb6d40207e985c5b7cedb06 []byte
+var md58c7becc66f7ffad96533054873aabd5e []byte
+
+//go:embed template/fragment/their-message.html
+var md5c5263b1408dab1cce5b881e18ad81d7c []byte
 
 //go:embed template/fragment/typing.html
 var md5632006067794e49ff3d59b7d67212756 []byte
@@ -21,16 +24,21 @@ var md5632006067794e49ff3d59b7d67212756 []byte
 //go:embed template/fragment/footer.html
 var md5308065b5078a49f986fc3c9f9b66e5d3 []byte
 
+//go:embed template/fragment/my-message.html
+var md51d7532eec859fde201d42b91e5fe5fe1 []byte
+
 //go:embed template/not_found.html
 var md5c3e7441b19141943f20e2dcd8026aa5c []byte
 
 // TemplateContents generated bindings for template files
 var TemplateContents = map[string][]byte{
   "template/register.html": md5d41d8cd98f00b204e9800998ecf8427e, // template/register.html
-  "template/index.html": md547e221f0ec6cc53390972e59b7820ecf, // template/index.html
-  "template/fragment/header.html": md542f5a74e7bb6d40207e985c5b7cedb06, // template/fragment/header.html
+  "template/index.html": md5229c0df79c3c029fe8d0bbac997d8d43, // template/index.html
+  "template/fragment/header.html": md58c7becc66f7ffad96533054873aabd5e, // template/fragment/header.html
+  "template/fragment/their-message.html": md5c5263b1408dab1cce5b881e18ad81d7c, // template/fragment/their-message.html
   "template/fragment/typing.html": md5632006067794e49ff3d59b7d67212756, // template/fragment/typing.html
   "template/fragment/footer.html": md5308065b5078a49f986fc3c9f9b66e5d3, // template/fragment/footer.html
+  "template/fragment/my-message.html": md51d7532eec859fde201d42b91e5fe5fe1, // template/fragment/my-message.html
   "template/not_found.html": md5c3e7441b19141943f20e2dcd8026aa5c, // template/not_found.html
 }
 

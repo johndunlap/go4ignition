@@ -5,6 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Go4ignition</title>
     <style>
+        form {
+            /* Ensure form itself spans full width */
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            box-sizing: border-box;
+            /* Optionally, remove any default margins or padding */
+            margin: 0;
+            padding: 5px;
+        }
+
+        caption {
+            padding: 0;
+        }
+
+        thead, tfoot, tbody {
+            display: table-row-group; /* Ensure these elements behave as expected in all browsers */
+        }
         body, html {
             height: 100%;
             margin: 0;
@@ -54,13 +76,14 @@
             flex-grow: 1;
             display: flex;
             flex-direction: column;
-            margin-left: 280px;
+            margin-left: 282px;
+            margin-right: 2px;
             margin-top: 50px;
+            margin-bottom: 29px;
         }
 
         .messages {
             flex-grow: 1;
-            background: #f0f0f0;
             padding: 15px;
             overflow-y: auto;
             display: flex;
@@ -69,6 +92,7 @@
 
         .message {
             max-width: 75%;
+            width: fit-content;
             padding: 10px 15px;
             margin: 5px 0;
             border-radius: 10px;
@@ -76,13 +100,15 @@
         }
 
         .message.them {
-            background: #e6ffe6;
+            background: #39FF5A;
             align-self: flex-start;
+            border-bottom-right-radius: 0;
         }
 
         .message.me {
-            background: #e6f3ff;
+            background: #0078FE;
             align-self: flex-end;
+            border-bottom-left-radius: 0;
         }
 
         .input-area {
@@ -94,6 +120,11 @@
             bottom: 0;
             left: 280px;
             box-sizing: border-box;
+        }
+
+        .message-form {
+            display: flex;
+            width: 100%;
         }
 
         #message-input {

@@ -15,14 +15,14 @@ var md5b0a0bbc44403335e09c63c9f2c584e7f []byte
 var md593063fe04ea37e3b3441590f9abf141a []byte
 
 //go:embed static/js/websocket.js
-var md5712b046ed05b2eb6f9cb5cb631a8c0fb []byte
+var md5d47a425e7085e3fc580a8886909a9d46 []byte
 
 // StaticFiles generated bindings for static files
 var StaticFiles = map[string][]byte{
   "/static/img/f114e431508cfafeac5338fe49eeb6bf.ico": FaviconICO, // static/img/favicon.ico
   "/static/img/b0a0bbc44403335e09c63c9f2c584e7f.jpeg": md5b0a0bbc44403335e09c63c9f2c584e7f, // static/img/favicon.jpeg
   "/static/js/93063fe04ea37e3b3441590f9abf141a.js": md593063fe04ea37e3b3441590f9abf141a, // static/js/htmx-2.0.3.js
-  "/static/js/712b046ed05b2eb6f9cb5cb631a8c0fb.js": md5712b046ed05b2eb6f9cb5cb631a8c0fb, // static/js/websocket.js
+  "/static/js/d47a425e7085e3fc580a8886909a9d46.js": md5d47a425e7085e3fc580a8886909a9d46, // static/js/websocket.js
 }
 
 // StaticFilesContentType mime types for static files
@@ -30,7 +30,7 @@ var StaticFilesContentType = map[string]string{
   "/static/img/f114e431508cfafeac5338fe49eeb6bf.ico": "image/vnd.microsoft.icon", // static/img/favicon.ico
   "/static/img/b0a0bbc44403335e09c63c9f2c584e7f.jpeg": "image/jpeg", // static/img/favicon.jpeg
   "/static/js/93063fe04ea37e3b3441590f9abf141a.js": "text/javascript", // static/js/htmx-2.0.3.js
-  "/static/js/712b046ed05b2eb6f9cb5cb631a8c0fb.js": "text/javascript", // static/js/websocket.js
+  "/static/js/d47a425e7085e3fc580a8886909a9d46.js": "text/javascript", // static/js/websocket.js
 }
 
 // StaticFileNames Resolve actual file names to md5 file names
@@ -38,5 +38,5 @@ var StaticFileNames = map[string]string{
   "/static/img/favicon.ico": "/static/img/f114e431508cfafeac5338fe49eeb6bf.ico",
   "/static/img/favicon.jpeg": "/static/img/b0a0bbc44403335e09c63c9f2c584e7f.jpeg",
   "/static/js/htmx-2.0.3.js": "/static/js/93063fe04ea37e3b3441590f9abf141a.js",
-  "/static/js/websocket.js": "/static/js/712b046ed05b2eb6f9cb5cb631a8c0fb.js",
+  "/static/js/websocket.js": "/static/js/d47a425e7085e3fc580a8886909a9d46.js",
 }

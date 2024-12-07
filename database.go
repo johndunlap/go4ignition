@@ -2,8 +2,8 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	_ "github.com/mattn/go-sqlite3"
+	"log"
 	"os"
 	"os/user"
 	"strconv"
@@ -56,7 +56,7 @@ func InitDb() {
 
 	if !DirExists(dataDir) {
 		CreateDir(dataDir)
-		fmt.Println("Created data directory: " + dataDir)
+		log.Println("Created data directory: " + dataDir)
 	}
 
 	// Open a database connection
@@ -73,12 +73,12 @@ func InitDb() {
 		if err != nil {
 			panic("Failed to set pragma " + key + " => " + pragmaValues[key] + ": " + err.Error())
 		}
-		fmt.Println("sqlite3: " + key + " => " + pragmaValues[key])
+		log.Println("sqlite3: " + key + " => " + pragmaValues[key])
 	}
 }
 
 func CloseDb() {
-	fmt.Println("sqlite3: Running pragma optimize...")
+	log.Println("sqlite3: Running pragma optimize...")
 
 	// https://www.sqlite.org/pragma.html#pragma_optimize
 	_, err := DatabaseHandle.Exec("pragma optimize")
@@ -86,7 +86,7 @@ func CloseDb() {
 		println("sqlite3: Failed to run pragma optimize")
 	}
 
-	fmt.Println("sqlite3: Closing database...")
+	log.Println("sqlite3: Closing database...")
 	err = DatabaseHandle.Close()
 	if err != nil {
 		println("sqlite3: Failed to close database: " + err.Error())
@@ -94,7 +94,7 @@ func CloseDb() {
 }
 
 func VacuumDb(dbPath *string) {
-	fmt.Println("Attempting to vacuum database: " + *dbPath)
+	log.Println("Attempting to vacuum database: " + *dbPath)
 
 	_, err := DatabaseHandle.Exec("VACUUM")
 
@@ -102,7 +102,7 @@ func VacuumDb(dbPath *string) {
 		panic("Failed to vacuum database: " + err.Error())
 	}
 
-	fmt.Println("OK")
+	log.Println("OK")
 	os.Exit(0)
 }
 
@@ -137,7 +137,7 @@ func RunMigrations(migrations []string) {
 				panic(1)
 			}
 		} else {
-			fmt.Println("Running migration " + strconv.Itoa(migrationID) + " with checksum " + actualMd5SumText)
+			log.Println("Running migration " + strconv.Itoa(migrationID) + " with checksum " + actualMd5SumText)
 			_, err = DatabaseHandle.Exec(migrations[migrationID])
 			if err != nil {
 				println("Error running migration: " + err.Error())

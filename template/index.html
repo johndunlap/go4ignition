@@ -1,5 +1,5 @@
 {{ template "template/fragment/header.html" . }}
-<body onload="onLoadHandler()">
+<body>
 <div class="chat-container">
     <div class="header-bar">
         <div id="hamburger" onclick="toggleMenu()">☰</div>
@@ -38,11 +38,14 @@
         </div>
     </div>
     <div class="input-area">
-        <input type="text" id="message-input" placeholder="Type a message..." required>
-        <button id="send-button">Send</button>
+        <form class="message-form">
+            <input type="text" name="message" id="message-input" placeholder="Type a message..." required>
+            <button hx-post="/send-chat" hx-swap="beforeend" hx-target="#chatMessages" id="send-button">Send</button>
+        </form>
     </div>
 </div>
 
+<!--
 <script>
     let messageHistory = {
         'user1': [],
@@ -99,17 +102,17 @@
         messageHistory[conversationId].push(message);
     }
 
-    document.querySelectorAll('.conversation-item').forEach(item => {
-        item.addEventListener('click', function() {
-            document.querySelector('.conversation-item.active').classList.remove('active');
-            this.classList.add('active');
-            if (window.innerWidth <= 768) {
-                toggleMenu(); // Close the menu after selecting a conversation on mobile
-            }
-            displayMessages(this.dataset.conversation);
-            document.getElementById('message-input').focus();
-        });
-    });
+    document.getElementById("form").onsubmit = function () {
+        if (!conn) {
+            return false;
+        }
+        if (!msg.value) {
+            return false;
+        }
+        conn.send(msg.value);
+        msg.value = "";
+        return false;
+    };
 
     document.getElementById('send-button').addEventListener('click', function(event) {
         event.preventDefault();
@@ -144,5 +147,6 @@
     }
 
 </script>
+-->
 </body>
 {{ template "template/fragment/footer.html" . }}

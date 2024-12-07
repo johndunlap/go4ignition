@@ -75,8 +75,9 @@ func main() {
 		http.HandleFunc("/ws", wsHandler)
 		http.HandleFunc("/", indexHandler)
 		http.HandleFunc("/static/", staticHandler)
+		http.HandleFunc("/send-chat", sendChatHandler)
 
-		fmt.Printf("Starting server: http://localhost:8888\n")
+		log.Println("Starting server: http://localhost:8888")
 		err := http.ListenAndServe(":8888", nil)
 
 		if errors.Is(err, http.ErrServerClosed) {
@@ -88,7 +89,7 @@ func main() {
 	}()
 
 	<-sigc
-	fmt.Println("\nReceived interrupt signal, shutting down...")
+	log.Println("\nReceived interrupt signal, shutting down...")
 	os.Exit(0)
 }
 
@@ -106,7 +107,7 @@ func indexHandler(res http.ResponseWriter, req *http.Request) {
 
 	err := tmpl.ExecuteTemplate(res, "template/index.html", data)
 	if err != nil {
-		println("ERROR: " + err.Error())
+		log.Println("ERROR: " + err.Error())
 	}
 }
 
@@ -139,7 +140,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		fmt.Println("Received message:", string(message))
+		log.Println("Received message:", string(message))
 
 		err = conn.WriteMessage(messageType, message)
 		if err != nil {
@@ -147,25 +148,6 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-}
-
-func websocketHandler(ws *websocket.Conn) {
-	/*	fmt.Println("Websocket client connected")
-
-		for {
-			var msg string
-			if err := websocket.Message.Receive(ws, &msg); err != nil {
-				fmt.Println("Error receiving message:", err)
-				break
-			}
-			fmt.Printf("Received: %s\n", msg)
-			if err := websocket.Message.Send(ws, "ACK: "+msg); err != nil {
-				fmt.Println("Error sending message:", err)
-				break
-			}
-		}
-		fmt.Println("Websocket client disconnected")
-	*/
 }
 
 func requestHandler(res http.ResponseWriter, req *http.Request) {
@@ -179,7 +161,7 @@ func requestHandler(res http.ResponseWriter, req *http.Request) {
 	}
 
 	mux.HandleFunc("/static/", staticHandler)
-	//mux.Handle("/ws", websocket.Handler(websocketHandler))
+	mux.HandleFunc("/ws", wsHandler)
 	mux.ServeHTTP(res, req)
 }
 
@@ -201,7 +183,7 @@ type Person struct {
 
 func (p Person) Save() {
 	// Add Person-specific save logic here (or just a debug print for now)
-	println("Saving Person:", p.Name)
+	log.Println("Saving Person:", p.Name)
 }
 
 type Inventory struct {
@@ -211,7 +193,7 @@ type Inventory struct {
 
 func (i Inventory) Save() {
 	// Add Inventory-specific save logic here
-	println("Saving Inventory item:", i.Item)
+	log.Println("Saving Inventory item:", i.Item)
 }
 
 func SetHeaders(res http.ResponseWriter, req *http.Request) {

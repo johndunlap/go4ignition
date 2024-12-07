@@ -12,21 +12,22 @@ const Bus = class {
         this.socket.onclose = (event) => this.onclose(event);
         this.socket.onerror = (event) => this.onerror(event);
         this.socket.onmessage = (event) => this.onmessage(event);
-        this.attempt = 0;
     }
 
     onopen() {
-        console.log('WebSocket opened');
+        console.log('Connected');
+        this.attempt = 0;
     }
 
     onclose(event) {
-        console.log('WebSocket closed:', event.code, event.reason);
-        const delay = Math.min(1000 * 2 ** this.attempt++, 30000);
+        console.log('Closed:', event.code, event.reason);
+        let delay = Math.min(1000 * 2 ** this.attempt++, 30000);
+        console.log('Reconnect attempt ' + this.attempt + ' in ' + delay + 'ms')
         setTimeout(() => this.connect(), delay);
     }
 
     onerror(event) {
-        console.error('WebSocket error:', event);
+        console.error('Error:', event);
     }
 
     onmessage(event) {
