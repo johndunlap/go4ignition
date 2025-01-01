@@ -1,9 +1,343 @@
-{{ template "template/fragment/header.html" . }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }}</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            background: #2c3e50;
+            color: #ecf0f1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        form {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        input, #message-input, .login-container input[type="text"], .login-container input[type="password"] {
+            width: 100%;
+            box-sizing: border-box;
+            margin: 2px 0;
+            padding: 10px;
+            border: 1px solid #3498db;
+            border-radius: 3px;
+            background: #2c3e50;
+            color: #ecf0f1;
+        }
+
+        /* Specific padding for consistency where needed */
+        input {
+            padding: 5px;
+        }
+
+        caption {
+            padding: 0;
+            margin: 2px 0;
+        }
+
+        thead, tfoot, tbody {
+            display: table-row-group;
+        }
+
+        .chat-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        .header-bar {
+            width: 100%;
+            height: 50px;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1002;
+        }
+
+        #hamburger {
+            cursor: pointer;
+            font-size: 1.5em;
+            margin-right: 2px;
+        }
+
+        .conversations {
+            width: 280px;
+            background: #34495e;
+            color: #ecf0f1;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            position: fixed;
+            top: 50px;
+            bottom: 0;
+            left: 0;
+            z-index: 1001;
+            margin-bottom: 0; /* Removed margin */
+        }
+
+        .chat-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            margin-left: 282px;
+            margin-right: 2px;
+            margin-top: 50px;
+            margin-bottom: 29px;
+        }
+
+        .messages {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            max-width: 75%;
+            width: fit-content;
+            padding: 10px 15px;
+            margin: 5px 0;
+            border-radius: 10px;
+            word-wrap: break-word;
+        }
+
+        .message.them {
+            background: #39FF5A;
+            align-self: flex-start;
+            border-bottom-right-radius: 0;
+        }
+
+        .message.me {
+            background: #0078FE;
+            align-self: flex-end;
+            border-bottom-left-radius: 0;
+        }
+
+        .input-area {
+            display: flex;
+            width: calc(100vw - 280px);
+            padding: 2px 2px;
+            background: #34495e;
+            position: fixed;
+            bottom: 0;
+            left: 280px; /* Kept as is since no margin above */
+            box-sizing: border-box;
+            margin-top: 0; /* Removed margin */
+        }
+
+        .message-form {
+            display: flex;
+            width: 100%;
+        }
+
+        #send-button, .login-container button {
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+            margin-left: 2px;
+        }
+
+        #send-button:hover, .login-container button:hover {
+            background: #2980b9;
+        }
+
+        .timestamp {
+            font-size: 0.75em;
+            color: #888;
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        #overlay {
+            position: fixed;
+            display: none;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        @media (max-width: 768px) {
+            #hamburger {
+                display: block;
+            }
+
+            .conversations {
+                width: 80vw;
+                transform: translateX(-100%);
+            }
+
+            .conversations.active {
+                transform: translateX(0);
+            }
+
+            .chat-area {
+                margin-left: 0;
+                width: 100vw;
+            }
+
+            .input-area {
+                left: 0;
+                width: 100vw;
+            }
+        }
+
+        .conversation-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-bottom: 2px;
+        }
+
+        .conversation-item:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .conversation-item.active {
+            background-color: rgba(255,255,255,0.2);
+        }
+
+        .profile-initials {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #3498db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+            margin-right: 2px;
+        }
+
+        .user-details {
+            flex-grow: 1;
+        }
+
+        .user-name {
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .last-message {
+            font-size: 14px;
+            color: #bdc3c7;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-left: 2px;
+        }
+
+        .status-indicator.online {
+            background: #2ecc71;
+        }
+
+        .status-indicator.offline {
+            background: #e74c3c;
+        }
+
+        #search-bar {
+            width: calc(100% - 30px);
+            padding: 8px 15px;
+            background: #2c3e50;
+            color: #ecf0f1;
+            border: none;
+            border-bottom: 1px solid #34495e;
+            margin: 12px 15px;
+            border-radius: 0;
+        }
+
+        #search-bar:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .tiblock {
+            align-items: center;
+            display: flex;
+            height: 17px;
+        }
+
+        .ticontainer .tidot {
+            background-color: #90949c;
+        }
+
+        .tidot {
+            animation: mercuryTypingAnimation 1.5s infinite ease-in-out;
+            border-radius: 2px;
+            display: inline-block;
+            height: 4px;
+            margin-right: 2px;
+            width: 4px;
+        }
+
+        @keyframes mercuryTypingAnimation {
+            0% { transform: translateY(0px); }
+            28% { transform: translateY(-5px); }
+            44% { transform: translateY(0px); }
+        }
+
+        .tidot:nth-child(1) { animation-delay: 200ms; }
+        .tidot:nth-child(2) { animation-delay: 300ms; }
+        .tidot:nth-child(3) { animation-delay: 400ms; }
+
+        .login-container {
+            background: #34495e;
+            padding: 40px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 300px;
+        }
+
+        .login-container h2 {
+            margin-bottom: 32px;
+            color: #ecf0f1;
+        }
+
+        .login-container a {
+            color: #3498db;
+            text-decoration: none;
+            margin-top: 22px;
+            display: block;
+        }
+
+        .login-container a:hover {
+            text-decoration: underline;
+        }
+    </style>
+    <script src="{{ (call .FileResolver "/static/js/htmx-2.0.3.js") }}"></script>
+    <script src="{{ (call .FileResolver "/static/js/htmx-ws-2.0.3.js") }}"></script>
+</head>
 <body>
-<div class="chat-container">
+<div class="chat-container" hx-ext="ws" ws-connect="/ws">
     <div class="header-bar">
         <div id="hamburger" onclick="toggleMenu()">☰</div>
-        <h1 style="margin-left: 10px;">Go4ignition</h1>
+        <h1 style="margin-left: 10px;">{{ .Title }}</h1>
     </div>
     <div id="overlay" onclick="toggleMenu()"></div>
     <div class="conversations" id="conversationMenu">
@@ -44,109 +378,5 @@
         </form>
     </div>
 </div>
-
-<!--
-<script>
-    let messageHistory = {
-        'user1': [],
-        'user2': [],
-        'user3': []
-    };
-
-    function toggleMenu() {
-        let menu = document.getElementById('conversationMenu');
-        let overlay = document.getElementById('overlay');
-        let body = document.body;
-
-        if (window.innerWidth <= 768) {
-            if (menu.classList.toggle('active')) {
-                overlay.style.display = 'block';
-                body.style.overflow = 'hidden';
-            } else {
-                overlay.style.display = 'none';
-                body.style.overflow = '';
-            }
-        }
-    }
-
-    function displayMessages(conversationId) {
-        let messagesDiv = document.getElementById('chatMessages');
-        messagesDiv.innerHTML = '';
-
-        messageHistory[conversationId].forEach(message => {
-            let messageWrapper = document.createElement('div');
-            messageWrapper.className = 'message-wrapper';
-
-            let messageElement = document.createElement('div');
-            messageElement.className = 'message ' + message.class;
-            messageElement.innerText = message.text;
-
-            let timestamp = document.createElement('div');
-            timestamp.className = 'timestamp';
-            timestamp.innerText = message.timestamp;
-
-            messageWrapper.appendChild(messageElement);
-            messageWrapper.appendChild(timestamp);
-            messagesDiv.appendChild(messageWrapper);
-        });
-
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }
-
-    function addMessage(conversationId, messageText, messageClass = 'me') {
-        let message = {
-            class: messageClass,
-            text: messageText,
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-        messageHistory[conversationId].push(message);
-    }
-
-    document.getElementById("form").onsubmit = function () {
-        if (!conn) {
-            return false;
-        }
-        if (!msg.value) {
-            return false;
-        }
-        conn.send(msg.value);
-        msg.value = "";
-        return false;
-    };
-
-    document.getElementById('send-button').addEventListener('click', function(event) {
-        event.preventDefault();
-        sendMessage();
-    });
-
-    document.getElementById('message-input').addEventListener('keyup', function(event) {
-        if (event.key === 'Enter') {
-            event.preventDefault();
-            sendMessage();
-        }
-    });
-
-    function sendMessage() {
-        let messageInput = document.getElementById('message-input');
-        if(messageInput.value.trim() === '') return;
-
-        let activeConversation = document.querySelector('.conversation-item.active').dataset.conversation;
-        addMessage(activeConversation, messageInput.value, 'me');
-        displayMessages(activeConversation);
-        messageInput.value = '';
-
-        setTimeout(() => {
-            addMessage(activeConversation, "This is an automated reply.", 'them');
-            displayMessages(activeConversation);
-        }, 1000);
-    }
-
-    function onLoadHandler() {
-        displayMessages('user1'); // Initial display of the first conversation
-        document.getElementById('message-input').focus(); // Focus cursor in the text box on page load
-    }
-
-</script>
--->
 </body>
-{{ template "template/fragment/footer.html" . }}
+</html>

@@ -1,0 +1,13 @@
+{{ template "template/fragment/header.html" . }}
+<body>
+<div hx-ext="ws" ws-connect="/ws">
+    <div id="notifications"></div>
+    <div id="chat_room">
+        ...
+    </div>
+    <form id="form" ws-send>
+        <input name="chat_message">
+    </form>
+</div>
+</body>
+{{ template "template/fragment/footer.html" . }}

@@ -98,9 +98,9 @@ for RAW_FILE in `cat ${FILES_TXT}`; do
 
 // ${HANDLER_NAME} HTTP handler for URI /${FILE}
 func ${HANDLER_NAME}(res http.ResponseWriter, req *http.Request) {
-  SetHeaders(res)
+  SetHeaders(res, req)
 
-	data := NewPageData()
+	data := NewPageData("", req)
 	data.IncludeHeader = IsHTMX(req)
 
   err := tmpl.ExecuteTemplate(res, "${TEMPLATE_FILE}", data)

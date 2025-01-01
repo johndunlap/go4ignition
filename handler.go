@@ -16,7 +16,7 @@ type PageData[V any] struct {
 
 func NewPageData[V any](value V, req *http.Request) PageData[V] {
 	return PageData[V]{
-		Title:         "go4ignition",
+		Title:         appName,
 		IncludeHeader: IsHTMX(req),
 		FileResolver: func(name string) string {
 			return StaticFileNames[name]
@@ -34,8 +34,8 @@ type ValidationResult struct {
 }
 
 func IndexHandler(res http.ResponseWriter, req *http.Request) {
-	log.Println(req.URL)
-
+	// Obnoxiously, this pattern is treated as a wildcard by the HTTP server, so we have to manually return 404 from
+	// this handler when the request URI isn't "/"
 	if req.URL.Path != "/" {
 		NotFoundHandler(res, req)
 		return
@@ -43,7 +43,10 @@ func IndexHandler(res http.ResponseWriter, req *http.Request) {
 
 	SetHeaders(res, req)
 
-	err := tmpl.ExecuteTemplate(res, "template/index.html", nil)
+	data := NewPageData("", req)
+
+	err := tmpl.ExecuteTemplate(res, "template/index.html", data)
+
 	if err != nil {
 		log.Println("ERROR: " + err.Error())
 	}
@@ -86,7 +89,7 @@ func staticHandler(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func sendChatHandler(res http.ResponseWriter, req *http.Request) {
+func SendChatHandler(res http.ResponseWriter, req *http.Request) {
 	SetHeaders(res, req)
 
 	if req.Method != http.MethodPost {
@@ -132,5 +135,44 @@ func RegisterHandler(res http.ResponseWriter, req *http.Request) {
 	err := tmpl.ExecuteTemplate(res, "template/register.html", data)
 	if err != nil {
 		log.Println("ERROR: " + err.Error())
+	}
+}
+
+// LoginHandler HTTP handler for URI /login
+func LoginHandler(res http.ResponseWriter, req *http.Request) {
+	SetHeaders(res, req)
+
+	data := NewPageData("", req)
+	data.IncludeHeader = IsHTMX(req)
+
+	err := tmpl.ExecuteTemplate(res, "template/login.html", data)
+	if err != nil {
+		println("ERROR: " + err.Error())
+	}
+}
+
+// ForgotHandler HTTP handler for URI /forgot
+func ForgotHandler(res http.ResponseWriter, req *http.Request) {
+	SetHeaders(res, req)
+
+	data := NewPageData("", req)
+	data.IncludeHeader = IsHTMX(req)
+
+	err := tmpl.ExecuteTemplate(res, "template/forgot.html", data)
+	if err != nil {
+		println("ERROR: " + err.Error())
+	}
+}
+
+// ChatHandler HTTP handler for URI /chat
+func ChatHandler(res http.ResponseWriter, req *http.Request) {
+	SetHeaders(res, req)
+
+	data := NewPageData("", req)
+	data.IncludeHeader = IsHTMX(req)
+
+	err := tmpl.ExecuteTemplate(res, "template/chat.html", data)
+	if err != nil {
+		println("ERROR: " + err.Error())
 	}
 }

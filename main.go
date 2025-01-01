@@ -15,6 +15,8 @@ import (
 	"time"
 )
 
+var appName = "Go4ignition"
+
 var tmpl = template.New("base")
 
 var upgrader = websocket.Upgrader{
@@ -71,11 +73,27 @@ func main() {
 	RunMigrations(migrations)
 
 	go func() {
+		// Register template handlers
+		for key := range TemplateHandlers {
+			// Skip registering handlers with trailing slashes because they are considered wildcards. Also, each URI should
+			// appear in this map twice, once with a trailing slash and again without. This is useful when resolving a
+			//request URI to a handler because a request may or may not have a trailing slash but there is no need to
+			//register both patterns with the http server as registering a handler without a trailing slash will handle
+			//requests which have a trailing slash
+			if key[len(key)-1:] == "/" && key != "/" {
+				continue
+			}
+
+			http.HandleFunc(key, TemplateHandlers[key])
+		}
+		hub := newHub()
+		go hub.run()
 		http.HandleFunc("/favicon.ico", faviconHandler)
-		http.HandleFunc("/ws", wsHandler)
-		http.HandleFunc("/", indexHandler)
+		http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+			serveWs(hub, w, r)
+		})
 		http.HandleFunc("/static/", staticHandler)
-		http.HandleFunc("/send-chat", sendChatHandler)
+		http.HandleFunc("/send-chat", SendChatHandler)
 
 		log.Println("Starting server: http://localhost:8888")
 		err := http.ListenAndServe(":8888", nil)
@@ -91,24 +109,6 @@ func main() {
 	<-sigc
 	log.Println("\nReceived interrupt signal, shutting down...")
 	os.Exit(0)
-}
-
-func indexHandler(res http.ResponseWriter, req *http.Request) {
-	// Obnoxiously, this pattern is treated as a wildcard by the HTTP server, so we have to manually return 404 from
-	// this handler when the request URI isn't "/"
-	if req.URL.Path != "/" {
-		NotFoundHandler(res, req)
-		return
-	}
-
-	SetHeaders(res, req)
-
-	data := NewPageData("", req)
-
-	err := tmpl.ExecuteTemplate(res, "template/index.html", data)
-	if err != nil {
-		log.Println("ERROR: " + err.Error())
-	}
 }
 
 func wsHandler(w http.ResponseWriter, r *http.Request) {

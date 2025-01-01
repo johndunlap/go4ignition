@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/user"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -51,8 +52,9 @@ func InitDb() {
 		panic("Failed to find current user: " + err.Error())
 	}
 
-	dataDir = usr.HomeDir + "/.go4ignition"
-	dbPath = dataDir + "/go4ignition.db"
+	name := strings.ToLower(appName)
+	dataDir = usr.HomeDir + "/." + name
+	dbPath = dataDir + "/" + name + ".db"
 
 	if !DirExists(dataDir) {
 		CreateDir(dataDir)

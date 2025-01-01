@@ -15,6 +15,8 @@ run_command() {
 
     ./genstatic.sh
     ./gentemplate.sh
+
+    # TODO: Parse this name out of main.go
     go build -o bin/go4ignition .
 
     if [ $? -eq 0 ]; then

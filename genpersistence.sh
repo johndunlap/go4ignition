@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# TODO: Use a transient database for code generation
 DATABASE_LOCATION=$HOME/.go4ignition/go4ignition.db
 
 TMP_DIR=$(mktemp -d)

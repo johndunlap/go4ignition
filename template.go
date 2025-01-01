@@ -6,17 +6,23 @@ import (
   "net/http"
 )
 
+//go:embed template/login.html
+var md56a264e92b472fd92750fd4e21d5b5882 []byte
+
 //go:embed template/register.html
-var md5d41d8cd98f00b204e9800998ecf8427e []byte
+var md592d2e2ba1bfeca64ccb98369c5e4173e []byte
 
 //go:embed template/index.html
-var md5229c0df79c3c029fe8d0bbac997d8d43 []byte
+var md5583c8a6bc74950069105ac68ea9e49a3 []byte
 
 //go:embed template/fragment/header.html
-var md58c7becc66f7ffad96533054873aabd5e []byte
+var md5fc58bf2baaa7775a482ac0df536bb3d8 []byte
 
 //go:embed template/fragment/typing.html
 var md5632006067794e49ff3d59b7d67212756 []byte
+
+//go:embed template/fragment/dragdrop.html
+var md5d27c992dadc9f23b42f5ded9af719982 []byte
 
 //go:embed template/fragment/footer.html
 var md5308065b5078a49f986fc3c9f9b66e5d3 []byte
@@ -24,25 +30,41 @@ var md5308065b5078a49f986fc3c9f9b66e5d3 []byte
 //go:embed template/fragment/message.html
 var md54bfb6b3bc3f44cb86b69ec72b7161e99 []byte
 
+//go:embed template/chat.html
+var md54fb243a19d244615a66bfa26502c6de0 []byte
+
 //go:embed template/not_found.html
 var md5c3e7441b19141943f20e2dcd8026aa5c []byte
 
+//go:embed template/forgot.html
+var md5fa8d118af5ffb2cc5f326ab19ed26505 []byte
+
 // TemplateContents generated bindings for template files
 var TemplateContents = map[string][]byte{
-  "template/register.html": md5d41d8cd98f00b204e9800998ecf8427e, // template/register.html
-  "template/index.html": md5229c0df79c3c029fe8d0bbac997d8d43, // template/index.html
-  "template/fragment/header.html": md58c7becc66f7ffad96533054873aabd5e, // template/fragment/header.html
+  "template/login.html": md56a264e92b472fd92750fd4e21d5b5882, // template/login.html
+  "template/register.html": md592d2e2ba1bfeca64ccb98369c5e4173e, // template/register.html
+  "template/index.html": md5583c8a6bc74950069105ac68ea9e49a3, // template/index.html
+  "template/fragment/header.html": md5fc58bf2baaa7775a482ac0df536bb3d8, // template/fragment/header.html
   "template/fragment/typing.html": md5632006067794e49ff3d59b7d67212756, // template/fragment/typing.html
+  "template/fragment/dragdrop.html": md5d27c992dadc9f23b42f5ded9af719982, // template/fragment/dragdrop.html
   "template/fragment/footer.html": md5308065b5078a49f986fc3c9f9b66e5d3, // template/fragment/footer.html
   "template/fragment/message.html": md54bfb6b3bc3f44cb86b69ec72b7161e99, // template/fragment/message.html
+  "template/chat.html": md54fb243a19d244615a66bfa26502c6de0, // template/chat.html
   "template/not_found.html": md5c3e7441b19141943f20e2dcd8026aa5c, // template/not_found.html
+  "template/forgot.html": md5fa8d118af5ffb2cc5f326ab19ed26505, // template/forgot.html
 }
 
 // TemplateHandlers generated handler bindings
 var TemplateHandlers = map[string]func(res http.ResponseWriter, req *http.Request){
+  "/login": LoginHandler,
+  "/login/": LoginHandler,
   "/register": RegisterHandler,
   "/register/": RegisterHandler,
   "/": IndexHandler,
+  "/chat": ChatHandler,
+  "/chat/": ChatHandler,
   "/not_found": NotFoundHandler,
   "/not_found/": NotFoundHandler,
+  "/forgot": ForgotHandler,
+  "/forgot/": ForgotHandler,
 }

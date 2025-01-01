@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTMX with Bidirectional Drag and Drop</title>
+    <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+    <style>
+        .list {
+            border: 1px solid #ccc;
+            min-height: 100px;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+<h1>HTMX with Bidirectional Drag and Drop</h1>
+
+<div>
+    <h2>Items</h2>
+    <ul id="items" class="list" hx-post="/update-list" hx-trigger="drop consume" hx-swap="outerHTML">
+        <li draggable="true" data-id="1">Item 1</li>
+        <li draggable="true" data-id="2">Item 2</li>
+        <li draggable="true" data-id="3">Item 3</li>
+    </ul>
+</div>
+
+<div>
+    <h2>Dropped Items</h2>
+    <ul id="droppedItems" class="list" hx-post="/update-list" hx-trigger="drop consume" hx-swap="outerHTML">
+        <!-- Items will appear here when dragged -->
+    </ul>
+</div>
+
+<script>
+    function handleDragStart(e) {
+        e.dataTransfer.setData('text/plain', e.target.dataset.id);
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault(); // Necessary to allow dropping
+    }
+
+    function handleDrop(e, listId) {
+        console.log('Drop event on list:', listId, 'Event target:', e.target);
+        e.preventDefault();
+        e.stopPropagation(); // Prevent further propagation of the drop event
+        var data = e.dataTransfer.getData('text');
+        var draggedItem = document.querySelector(`[data-id="${data}"]`);
+
+        if (draggedItem && e.target.closest('ul').id !== draggedItem.parentElement.id) {
+            console.log('Moving item to new list');
+            e.target.appendChild(draggedItem);
+            // Instead of triggering HTMX here, we'll let HTMX handle the drop event
+        }
+    }
+
+    ['items', 'droppedItems'].forEach(listId => {
+        document.querySelectorAll(`#${listId} li`).forEach(item => {
+            item.addEventListener('dragstart', handleDragStart);
+        });
+
+        const list = document.getElementById(listId);
+        if (!list._hasDragListeners) {
+            list.addEventListener('dragover', handleDragOver);
+            list.addEventListener('drop', (e) => handleDrop(e, listId));
+            list._hasDragListeners = true;
+        }
+    });
+</script>
+</body>
+</html>
