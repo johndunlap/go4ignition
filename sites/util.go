@@ -1,10 +1,10 @@
-package main
+package sites
 
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"flag"
 	"fmt"
-	"math/rand/v2"
 	"os"
 	"strconv"
 )
@@ -79,6 +79,24 @@ func Md5ToPath(hash string, dataDir string) string {
 	return dataDir + "/" + path
 }
 
+func FlagInt(flagName string, description string, envName string, defaultValue int) *int {
+	var tmp = os.Getenv(envName)
+	var result = defaultValue
+
+	if tmp != "" {
+		parsed, err := strconv.Atoi(tmp)
+
+		if err != nil {
+			println(envName + " must contain an integer which is greater than zero: " + err.Error())
+			os.Exit(1)
+		}
+
+		result = parsed
+	}
+
+	return flag.Int(flagName, result, description)
+}
+
 // Md5sum Compute the MD5 hash of the given string
 func Md5sum(text string) string {
 	// Create a new MD5 hash object
@@ -94,59 +112,26 @@ func Md5sum(text string) string {
 	return hex.EncodeToString(hashBytes)
 }
 
-// Check Panic if there's something to panic about
-func Check(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
-
 // FileHandler Used as an argument to MkTemp
 type FileHandler func(*os.File)
 
 // MkTemp Handling the temporary file with a Lambda allows the temporary file to be automatically deleted once it is
 // no longer needed
-func MkTemp(fn FileHandler) {
+func MkTemp(fn FileHandler) error {
 	// Create a temporary file
 	tmpFile, err := os.CreateTemp("", "tmp")
-	Check(err)
+
+	if err != nil {
+		return fmt.Errorf("failed to create temporary file: %w", err)
+	}
 
 	// Try to clean up after ourselves
 	defer os.Remove(tmpFile.Name())
 
 	// Do something with the temporary file
 	fn(tmpFile)
-}
 
-// Obfuscate Output Go code which embeds the given string in the go executable in an obfuscated manner
-func Obfuscate(input string) string {
-	output := "package main\nimport \"fmt\"\n\n\n"
-
-	finalFunc := "func final() string {\n\t return "
-
-	for x := 0; x < len(input); x++ {
-		funcName := "c" + strconv.Itoa(rand.IntN(1000000000))
-		output += "func " + funcName + "() string {\n"
-
-		chr := string(input[x])
-		if chr == "\n" {
-			chr = "\\n"
-		}
-
-		output += "\treturn \"" + chr + "\"\n"
-		output += "}\n\n"
-		finalFunc += "\t" + funcName + "()"
-
-		if len(input)-1 != x {
-			finalFunc += " +"
-		}
-		finalFunc += "\n"
-	}
-
-	finalFunc += "}\n"
-	output += finalFunc
-
-	return output
+	return nil
 }
 
 func Md5(content string) string {

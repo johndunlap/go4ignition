@@ -2,3 +2,5 @@
 *.iml
 *.iws
 bin/*
+/sites/example_com/
+/sites/test_com/

@@ -1,0 +1,14 @@
+    <meta property="og:type" content="website">
+    <meta name="robots" content="index, follow">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">{{ if ne .Title "" }}
+    <title>{{ .Title }}</title>{{ end }}{{ if ne .Description "" }}
+    <meta name="description" content="{{ .Description }}">{{ end }}{{ if ne .CanonicalLink "" }}
+    <link rel="canonical" href="{{ .CanonicalLink }}">{{ end }}{{ if ne .OGTitle "" }}
+    <meta property="og:title" content="{{ .OGTitle }}">{{ end }}{{ if ne .OGDescription "" }}
+    <meta property="og:description" content="{{ .OGDescription }}">{{ end }}{{ if ne .OGURL "" }}
+    <meta property="og:url" content="{{ .OGURL }}">{{ end }}{{ if ne .OGImage "" }}
+    <meta property="og:image" content="{{ .OGImage }}">{{ end }}{{ if ne .TwitterDescription "" }}
+    <meta name="twitter:description" content="{{ .TwitterDescription }}">{{ end }}{{ if ne .TwitterTitle "" }}
+    <meta name="twitter:title" content="{{ .TwitterTitle }}">{{ end }}{{ if ne .TwitterImage "" }}
+    <meta name="twitter:image" content="{{ .TwitterImage }}">{{ end }}
+    <meta name="twitter:card" content="summary_large_image">

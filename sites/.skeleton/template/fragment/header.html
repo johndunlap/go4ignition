@@ -1,0 +1,14 @@
+{{ if not .IncludeHeader }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{ template "template/fragment/seo.html" . }}
+    <link rel="stylesheet" href="{{ (call .FileResolver "/static/css/pico.classless.min.css") }}">
+    <script src="{{ (call .FileResolver "/static/js/htmx-2.0.3.js") }}"></script>
+    <script src="{{ (call .FileResolver "/static/js/htmx-ws-2.0.2.js") }}"></script>
+    <script src="{{ (call .FileResolver "/static/js/htmx-ws-2.0.2.js") }}"></script>
+</head>
+<body id="body">
+{{ end }}

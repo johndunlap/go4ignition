@@ -1,4 +1,4 @@
-package main
+package _skeleton
 
 var migrations = []string{
 	`CREATE TABLE IF NOT EXISTS Migration (
